@@ -6,6 +6,8 @@ output: html_document
 ---
 
 ```{r}
+#installing the packages required for the tutorial
+
 install.packages("dismo")#installing dismo package
 install.packages("readr")#installing readr package to read csv files
 install.packages("maptools")#installing maptools
@@ -15,12 +17,16 @@ install.packages("ggmap")
 install.packages("sf", dependencies = TRUE)
 install.packages("rnaturalearthdata", dependencies = TRUE)
 ```
+# Loading the data
+For this tutorial we are going to use a set of data downloaded from Global Biodiversity Information Facility (GBIF)
 
 ```{r}
 library(readr)
 miscanthus <- read_csv("./miscanthus distribution.csv")#import the data from the file downloaded from https://www.gbif.org/
 head(miscanthus)
-
+```
+# Mapping with maptools
+```{r}
 library(maptools)
 data(wrld_simpl)
 plot(wrld_simpl, xlim=c(60,155), ylim=c(-20,60), axes=TRUE, col="light yellow")
@@ -34,6 +40,7 @@ points(miscanthus$decimalLongitude, miscanthus$decimalLatitude, col=as.factor(mi
 points(miscanthus$decimalLongitude, miscanthus$decimalLatitude, col=as.factor(miscanthus$species), cex=0.75)
 ```
 
+# Mapping with sf
 ```{r}
 library(sf)
 library(rnaturalearth)
@@ -63,6 +70,7 @@ ggplot()+
   coord_sf(xlim=c(60,155), ylim=c(-20,60))
 ```
 
+# Mapping with ggmap
 ```{r}
 library(dplyr)
 miscanthus_dens<-miscanthus%>%
