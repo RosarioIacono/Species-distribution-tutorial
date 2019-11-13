@@ -1,0 +1,88 @@
+---
+title: "Species distribution with R"
+author: "Rosario Iacono"
+date: "13/11/2019"
+output: html_document
+---
+
+```{r}
+install.packages("dismo")#installing dismo package
+install.packages("readr")#installing readr package to read csv files
+install.packages("maptools")#installing maptools
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("ggmap")
+install.packages("sf", dependencies = TRUE)
+install.packages("rnaturalearthdata", dependencies = TRUE)
+```
+
+```{r}
+library(readr)
+miscanthus <- read_csv("./miscanthus distribution.csv")#import the data from the file downloaded from https://www.gbif.org/
+head(miscanthus)
+
+library(maptools)
+data(wrld_simpl)
+plot(wrld_simpl, xlim=c(60,155), ylim=c(-20,60), axes=TRUE, col="light yellow")
+# restore the box around the map
+box()
+
+# add the points
+plot(wrld_simpl, xlim=c(60,155), ylim=c(-20,60), axes=TRUE, col="light yellow")
+points(miscanthus$decimalLongitude, miscanthus$decimalLatitude, col=as.factor(miscanthus$species), pch=20, cex=0.75)
+# plot points again to add a border, for better visibility 
+points(miscanthus$decimalLongitude, miscanthus$decimalLatitude, col=as.factor(miscanthus$species), cex=0.75)
+```
+
+```{r}
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+# Create data frame of only longitude and latitude values
+coords <- select(miscanthus_dens, decimalLongitude, decimalLatitude)
+
+# Create SpatialPoints object with coords and CRS
+points_sf <- st_as_sf(miscanthus_dens, coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
+
+coast_sf <- ne_coastline(scale = "medium", returnclass = "sf")
+countries_sf <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+```{r}
+
+
+ggplot()+
+  geom_sf(data = coast_sf) + 
+  geom_sf(data = points_sf,
+          aes(color = species, size = n),
+          alpha = 0.7,
+          show.legend = "point") +
+    labs(title= "A map showing our distribution")+
+    xlab("Longitude (decimal degrees)")+
+    ylab("Latitude (decimal degrees)")+
+  coord_sf(xlim=c(60,155), ylim=c(-20,60))
+```
+
+```{r}
+library(dplyr)
+miscanthus_dens<-miscanthus%>%
+  count(species, decimalLatitude, decimalLongitude)
+head(miscanthus_dens)
+
+library("ggmap")
+map <- c(left = 60, bottom = -20, right = 155, top = 60)
+map1<-get_stamenmap(map, zoom = 3, maptype = "toner-lite")
+ggmap(map1)+
+    #geom_point(data = miscanthus_dens, 
+               #mapping = aes(x = decimalLongitude, 
+                             #y = decimalLatitude))+
+    stat_density_2d(data = miscanthus_dens,aes(x = decimalLongitude,
+                                               y = decimalLatitude, 
+                                               fill = species), 
+                    geom = "polygon", 
+                    alpha = .3, 
+                    color = NA)
+```
+
+
+
